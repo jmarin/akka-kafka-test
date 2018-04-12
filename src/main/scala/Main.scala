@@ -9,6 +9,7 @@ import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.serialization.{ByteArraySerializer, StringSerializer}
 import org.apache.kafka.common.serialization.{ByteArrayDeserializer, StringDeserializer}
 import com.typesafe.config.ConfigFactory
+import scala.concurrent.duration._
 
 object Main extends App {
   
@@ -22,7 +23,8 @@ object Main extends App {
   val producerSettings = ProducerSettings(system, new ByteArraySerializer, new StringSerializer)
   .withBootstrapServers(servers)
 
-  val done = Source(1 to 10)
+  val done = Source
+    .tick(200 milliseconds, 30 seconds, "message")
     .map(_.toString)
     .map { elem =>
       println(s"Sink producer element: $elem")
