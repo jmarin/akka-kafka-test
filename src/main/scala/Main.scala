@@ -6,13 +6,19 @@ import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Source, Sink}
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.clients.consumer.ConsumerConfig
-import org.apache.kafka.common.serialization.{ByteArraySerializer, StringSerializer}
-import org.apache.kafka.common.serialization.{ByteArrayDeserializer, StringDeserializer}
+import org.apache.kafka.common.serialization.{
+  ByteArraySerializer,
+  StringSerializer
+}
+import org.apache.kafka.common.serialization.{
+  ByteArrayDeserializer,
+  StringDeserializer
+}
 import com.typesafe.config.ConfigFactory
 import scala.concurrent.duration._
 
 object Main extends App {
-  
+
   implicit val system = ActorSystem("AkkaKafkaTest")
   implicit val materializer = ActorMaterializer()
 
@@ -20,8 +26,9 @@ object Main extends App {
 
   val servers = config.getString("test.kafka.servers")
 
-  val producerSettings = ProducerSettings(system, new ByteArraySerializer, new StringSerializer)
-  .withBootstrapServers(servers)
+  val producerSettings =
+    ProducerSettings(system, new ByteArraySerializer, new StringSerializer)
+      .withBootstrapServers(servers)
 
   val done = Source
     .tick(200 milliseconds, 30 seconds, "message")
@@ -32,14 +39,15 @@ object Main extends App {
     }
     .runWith(Producer.plainSink(producerSettings))
 
-  val consumerSettings = ConsumerSettings(system, new ByteArrayDeserializer, new StringDeserializer)
-    .withBootstrapServers(servers)
-    .withGroupId("akka-stream-kafka-test")
-    .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
+  val consumerSettings =
+    ConsumerSettings(system, new ByteArrayDeserializer, new StringDeserializer)
+      .withBootstrapServers(servers)
+      .withGroupId("akka-stream-kafka-test")
+      .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
 
-  Consumer.committableSource(consumerSettings, Subscriptions.topics("akka-test1"))
+  Consumer
+    .committableSource(consumerSettings, Subscriptions.topics("akka-test1"))
     .map(msg => println(msg))
     .runWith(Sink.ignore)
-
 
 }
